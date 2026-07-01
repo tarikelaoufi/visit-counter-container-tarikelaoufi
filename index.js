@@ -93,7 +93,7 @@ app.get("/", async (req, res) => {
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           >
-          <title>Compteur de visites</title>
+          <title>Compteur de visites: Déploiement automatique réussi</title>
 
           <style>
             * {
