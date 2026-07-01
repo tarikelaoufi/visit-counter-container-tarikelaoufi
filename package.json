@@ -1,0 +1,21 @@
+{
+  "name": "visit-counter-app-tarikelaoufi",
+  "version": "1.0.0",
+  "description": "Compteur de visites déployé sur Azure avec GitHub Actions",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "azure",
+    "github-actions",
+    "nodejs",
+    "devops"
+  ],
+  "author": "Tarik Elaoufi",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
