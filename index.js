@@ -93,7 +93,7 @@ app.get("/", async (req, res) => {
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           >
-          <title>Compteur de visites : Test CI/CD réussi</title>
+          <title>Compteur de visites : Test CI/CD</title>
 
           <style>
             * {
@@ -198,7 +198,7 @@ app.get("/", async (req, res) => {
 
         <body>
           <div class="card">
-            <h1>Compteur de visites : Test CI/CD réussi</h1>
+            <h1>Compteur de visites : Test CI/CD</h1>
 
             <p class="author">
               <strong>Réalisé par :</strong> Tarik El Aoufi
@@ -241,7 +241,7 @@ app.get("/", async (req, res) => {
             </div>
 
             <div class="status">
-              Application déployée automatiquement sur Azure avec GitHub Actions
+              Application Node.js déployée automatiquement sur Azure avec GitHub Actions
             </div>
           </div>
         </body>
