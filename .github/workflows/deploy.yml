@@ -18,10 +18,10 @@ jobs:
 
     steps:
       - name: Récupérer le code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Se connecter à Azure
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -44,8 +44,18 @@ jobs:
           docker push "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           docker push "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest"
 
-      - name: Déployer sur Azure Web App
+      - name: Déployer le SiteContainer sur Azure
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          images: ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          resource-group-name: rg-tarik-container-free
+          sitecontainers-config: >-
+            [
+              {
+                "name": "main",
+                "image": "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}",
+                "targetPort": 3000,
+                "isMain": true,
+                "authType": "SystemIdentity"
+              }
+            ]
