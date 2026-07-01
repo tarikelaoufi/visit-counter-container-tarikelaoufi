@@ -6,11 +6,17 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: visit-counter-production
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 env:
   IMAGE_NAME: visit-counter
+  RESOURCE_GROUP: rg-tarik-container-free
+  CONTAINER_NAME: main
 
 jobs:
   build-and-deploy:
@@ -34,28 +40,46 @@ jobs:
 
       - name: Construire l'image Docker
         run: |
-          docker build \
+          docker build --no-cache \
             -t "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" \
-            -t "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest" \
             .
 
       - name: Envoyer l'image vers ACR
         run: |
-          docker push "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          docker push "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest"
+          docker push \
+            "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
 
-      - name: Déployer le SiteContainer sur Azure
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
-          resource-group-name: rg-tarik-container-free
-          sitecontainers-config: >-
-            [
-              {
-                "name": "main",
-                "image": "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}",
-                "targetPort": 3000,
-                "isMain": true,
-                "authType": "SystemIdentity"
-              }
-            ]
+      - name: Mettre à jour le SiteContainer Azure
+        run: |
+          az webapp sitecontainers update \
+            --name "${{ secrets.AZURE_WEBAPP_NAME }}" \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --container-name "${{ env.CONTAINER_NAME }}" \
+            --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" \
+            --target-port 3000 \
+            --is-main true \
+            --system-assigned-identity true \
+            --only-show-errors \
+            --output none
+
+      - name: Redémarrer l'application
+        run: |
+          az webapp restart \
+            --name "${{ secrets.AZURE_WEBAPP_NAME }}" \
+            --resource-group "${{ env.RESOURCE_GROUP }}"
+
+      - name: Vérifier l'image configurée
+        run: |
+          DEPLOYED_IMAGE=$(az webapp sitecontainers show \
+            --name "${{ secrets.AZURE_WEBAPP_NAME }}" \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --container-name "${{ env.CONTAINER_NAME }}" \
+            --query image \
+            --output tsv)
+
+          EXPECTED_IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+          echo "Image attendue : $EXPECTED_IMAGE"
+          echo "Image configurée : $DEPLOYED_IMAGE"
+
+          test "$DEPLOYED_IMAGE" = "$EXPECTED_IMAGE"
